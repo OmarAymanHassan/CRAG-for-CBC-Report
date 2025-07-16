@@ -26,6 +26,7 @@
 ## RAG Pipeline
 
 ![RAG Pipeline](./RAG%20Pipeline.png)
+
 *Figure: The full LangGraph and RAG pipeline, from CBC report ingestion to answer generation.*
 
 ---
