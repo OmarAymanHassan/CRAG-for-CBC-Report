@@ -1,10 +1,29 @@
 # MultiIndexRAG: Corrective RAG for Medical CBC Reports
 
+## Table of Contents
+1. [Overview](#overview)
+2. [RAG Pipeline](#rag-pipeline)
+3. [Vectorstore Contents](#vectorstore-contents)
+4. [Features](#features)
+5. [End-to-End Pipeline](#end-to-end-pipeline)
+6. [How It Works](#how-it-works)
+7. [Project Structure](#project-structure)
+8. [Example Workflow](#example-workflow)
+9. [Notable Design Choices](#notable-design-choices)
+10. [Key Technologies](#key-technologies)
+11. [Customization](#customization)
+12. [Project Presentation](#project-presentation)
+13. [Credits](#credits)
+14. [License](#license)
+15. [Contact](#contact)
+
 ## Overview
 
 **MultiIndexRAG** is an advanced Retrieval-Augmented Generation (RAG) pipeline designed for the medical domain, specifically for analyzing and interpreting Complete Blood Count (CBC) reports. The system leverages multi-vector summarization, corrective retrieval, and LLM-based reasoning to provide accurate, context-aware answers to clinical questions about patient CBCs, using both local medical literature and web search as fallback.
 
 ---
+
+## RAG Pipeline
 
 ![RAG Pipeline](./RAG%20Pipeline.png)
 *Figure: The full LangGraph and RAG pipeline, from CBC report ingestion to answer generation.*
@@ -26,25 +45,27 @@ This ensures that, when a CBC report is processed, the system can retrieve not o
 
 - **MultiVectorStore Summarization**:  
   Each medical document (PDFs, web articles) is split into chunks and summarized using an LLM. These summaries are embedded and stored in a vector database (Chroma/FAISS), enabling efficient semantic retrieval.
-
 - **Patient Report Summarization**:  
   When a new CBC report is uploaded, it is parsed, structured, and summarized by an LLM to extract abnormalities and suggest possible diagnoses (e.g., "Microcytic Hypochromic Anemia").
-
 - **Semantic Retrieval via MultiVectorStore**:  
   At query time, the system compares the summary of the patient report to the stored document summaries. If a match is found (using vector similarity), the system retrieves the **original full document(s)** corresponding to the most relevant summaries, not just the summary chunk.
-
 - **Corrective RAG with Grading and Web Search**:  
   After retrieval, a grading LLM checks if the majority of retrieved documents are relevant to the clinical question (majority voting).  
-  - If **relevant**, the answer is generated from the retrieved local documents.
+  - If **relevant**, the answer is generated from the retrieved local documents.  
   - If **not relevant**, the system automatically reformulates the query and performs a web search, retrieving and incorporating up-to-date external information before generating the answer.
 
-- **End-to-End Pipeline**:  
-  The workflow is orchestrated as a LangGraph state machine, handling:
-  1. CBC report detection and parsing
-  2. Summarization and diagnosis suggestion
-  3. Retrieval and grading
-  4. Corrective web search if needed
-  5. Final answer generation
+---
+
+## End-to-End Pipeline
+
+The workflow is orchestrated as a LangGraph state machine, handling:
+
+1. CBC report detection and parsing
+2. The main parameters of the CBC report are added to the database (JSON/CSV).
+3. The report is summarized and a diagnosis is suggested
+4. Retrieval and grading
+5. Corrective web search if needed
+6. Final answer generation
 
 ---
 
@@ -87,17 +108,6 @@ This ensures that, when a CBC report is processed, the system can retrieve not o
 
 ---
 
-## Key Technologies
-
-- **LangChain / LangGraph**: Orchestration, state management, and chaining.
-- **LLMs**: Gemini, Llama-3-70B, etc. for summarization, grading, and generation.
-- **Chroma/FAISS**: Vector database for semantic search.
-- **MultiVectorRetriever**: Links summary chunks to full documents for context-rich retrieval.
-- **PyPDFLoader**: PDF parsing.
-- **TavilySearch**: Web search fallback for corrective RAG.
-
----
-
 ## Project Structure
 
 ```
@@ -108,6 +118,8 @@ This ensures that, when a CBC report is processed, the system can retrieve not o
 ├── cbc_output.json          # Output: structured CBC reports (main parameters saved here)
 ├── cbc_reports.csv          # Output: flattened CBC reports for analysis (database)
 ├── requirements.txt         # Python dependencies
+├── Presentation.pptx        # Project presentation (overview, pipeline, features)
+├── RAG Pipeline.png         # Visual pipeline diagram
 └── README.md                # (this file)
 ```
 
@@ -131,36 +143,23 @@ This ensures that, when a CBC report is processed, the system can retrieve not o
 
 - **MultiVectorStore**:  
   Enables fine-grained, chunk-level semantic search, but always returns the full parent document for answer generation, ensuring rich context.
-
 - **Summary-to-Summary Matching**:  
   Retrieval is based on comparing the LLM-generated summary of the patient report to the LLM-generated summaries of the knowledge base, improving precision.
-
 - **Corrective RAG**:  
   If the system's retrieval is insufficient (as judged by LLM majority voting), it automatically falls back to web search, reformulates the query, and tries again—ensuring robust, up-to-date answers.
-
 - **LLM-Driven Grading and Query Rewriting**:  
   All critical steps (grading, summarization, query rewriting) are handled by LLMs for maximum flexibility and domain adaptation.
 
 ---
 
-## Example: CBC Report Summarization & Retrieval
+## Key Technologies
 
-- **CBC Report**:  
-  - Low Hb, low Hct, low MCV, low MCH, high RDW
-  - LLM summary: "Findings may indicate Microcytic Hypochromic Anemia"
-- **Retrieval**:  
-  - System queries the vector store with this summary.
-  - Retrieves and grades relevant medical documents (e.g., iron deficiency anemia guidelines).
-  - If not enough relevant documents, performs web search and retries.
-
----
-
-## How to Run
-
-1. Install dependencies (see `requirements.txt` if present).
-2. Place your medical PDFs in the `RAG/` folder.
-3. Run `MultiIndexRAG.ipynb` in Jupyter or Colab.
-4. Upload a CBC report PDF and follow the notebook prompts.
+- **LangChain / LangGraph**: Orchestration, state management, and chaining.
+- **LLMs**: Gemini, Llama-3-70B, etc. for summarization, grading, and generation.
+- **Chroma/FAISS**: Vector database for semantic search.
+- **MultiVectorRetriever**: Links summary chunks to full documents for context-rich retrieval.
+- **PyPDFLoader**: PDF parsing.
+- **TavilySearch**: Web search fallback for corrective RAG.
 
 ---
 
@@ -173,8 +172,26 @@ This ensures that, when a CBC report is processed, the system can retrieve not o
 
 ---
 
+## Project Presentation
+
+A project presentation is available as **Presentation.pptx** in this repository. This presentation provides a concise overview of the pipeline, features, and usage of the CRAG for CBC Report project. It is ideal for quick understanding, sharing with collaborators, or presenting the workflow and results to others.
+
+---
+
 ## Credits
 
 - Built with [LangChain](https://github.com/langchain-ai/langchain), [Chroma](https://www.trychroma.com/), [FAISS](https://github.com/facebookresearch/faiss), [PyPDFLoader](https://github.com/langchain-ai/langchain), and [Tavily](https://www.tavily.com/).
 - LLMs: Gemini, Llama-3-70B, etc.
+
+---
+
+## License
+
+This project is for research and educational purposes. Please ensure compliance with all data privacy and medical information regulations when using real patient data.
+
+---
+
+## Contact
+
+For questions or collaboration, please open an issue or contact the project maintainer.
 
